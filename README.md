@@ -1,51 +1,151 @@
 <!---
 {
-  "depends_on": [],
+  "id": "1b40b633-75bc-41c4-be3c-a7f9b5e8d40b",
+  "depends_on": ["AND", "24b25804-5bb5-443f-a78a-1bd485bebed8", "2d1d315d-bb92-48c0-b19f-19529a45e5ff"],
   "author": "Stephan Bökelmann",
-  "first_used": "2025-03-17",
-  "keywords": ["learning", "exercises", "education", "practice"]
+  "first_used": "2025-05-13",
+  "keywords": ["docker", "python", "packaging", "requirements.txt"]
 }
 --->
 
-# Learning Through Exercises
+# Packaging a Python Application with Docker
+
+> In this exercise you will learn how to containerize a Python application using Docker. Furthermore we will explore how to manage dependencies using `requirements.txt` inside a Docker context.
 
 ## Introduction
-Learning by doing is one of the most effective methods to acquire new knowledge and skills. Rather than passively consuming information, actively engaging in problem-solving fosters deeper understanding and long-term retention. By working through structured exercises, students can grasp complex concepts in a more intuitive and applicable way. This approach is particularly beneficial in technical fields like programming, mathematics, and engineering.
+
+Packaging applications in Docker containers has become a standard practice in software development and deployment. Containers provide a consistent environment, making it easier to deploy applications across different platforms. For Python developers, Docker not only ensures consistency in runtime environments but also simplifies the handling of dependencies and system libraries.
+
+In this exercise, you'll start by creating a basic "Hello, World!" Python script and learn how to package it into a Docker image. You'll then extend the setup to include Python dependencies managed via a `requirements.txt` file. This represents the most widely supported and straightforward method in Python dependency management and serves as a reliable baseline for containerized Python projects.
+
+Understanding this method will help you grasp the essential practices of Python packaging and how Docker integrates seamlessly into development workflows.
 
 ### Further Readings and Other Sources
-- [The Importance of Practice in Learning](https://www.sciencedirect.com/science/article/pii/S036013151300062X)
-- "The Art of Learning" by Josh Waitzkin
-- [How to Learn Effectively: 5 Key Strategies](https://www.edutopia.org/article/5-research-backed-learning-strategies)
+
+* [Docker Official Docs on Python](https://docs.docker.com/language/python/)
+* [Python Packaging Authority Guide](https://packaging.python.org/en/latest/tutorials/packaging-projects/)
+* [YouTube: Python Docker Tutorial](https://www.youtube.com/watch?v=GW0rj4sNH2w)
 
 ## Tasks
-1. **Write a Summary**: Summarize the concept of "learning by doing" in 3-5 sentences.
-2. **Example Identification**: List three examples from your own experience where learning through exercises helped you understand a topic better.
-3. **Create an Exercise**: Design a simple exercise for a topic of your choice that someone else could use to practice.
-4. **Follow an Exercise**: Find an online tutorial that includes exercises and complete at least two of them.
-5. **Modify an Existing Exercise**: Take a basic problem from a textbook or online course and modify it to make it slightly more challenging.
-6. **Pair Learning**: Explain a concept to a partner and guide them through an exercise without giving direct answers.
-7. **Review Mistakes**: Look at an exercise you've previously completed incorrectly. Identify why the mistake happened and how to prevent it in the future.
-8. **Time Challenge**: Set a timer for 10 minutes and try to solve as many simple exercises as possible on a given topic.
-9. **Self-Assessment**: Create a checklist to evaluate your own performance in completing exercises effectively.
-10. **Reflect on Progress**: Write a short paragraph on how this structured approach to exercises has influenced your learning.
 
-<details>
-  <summary>Tip for Task 5</summary>
-  Try making small adjustments first, such as increasing the difficulty slightly or adding an extra constraint.
-</details>
+### Task 1: Create a Hello World and Package it in an Image
+
+In this task, you will create a minimal Python application and package it inside a Docker image. This is your first step in containerization and helps ensure your script can run reliably on any system with Docker installed.
+
+1. Create a new directory structure to organize your files:
+
+   ```bash
+   mkdir -p hello-docker/app
+   cd hello-docker
+   ```
+
+2. Write a simple Python script in the `app` folder:
+
+   ```python
+   # ./app/hello.py
+   print("Hello, World!")
+   ```
+
+   This script simply prints a greeting message and serves as the application entry point.
+
+3. Create a `Dockerfile` in the root of the project directory:
+
+   ```Dockerfile
+   # ./Dockerfile
+   FROM python:3.11-slim
+   WORKDIR /app
+   COPY ./app /app
+   CMD ["python", "hello.py"]
+   ```
+
+   * `FROM python:3.11-slim` selects a minimal Python base image.
+   * `WORKDIR /app` sets the working directory inside the container.
+   * `COPY ./app /app` transfers your local Python code into the container.
+   * `CMD [...]` defines the command to run when the container starts.
+
+4. Build your Docker image using the Docker CLI:
+
+   ```bash
+   docker build -t hello-python .
+   ```
+
+   This command tells Docker to create an image named `hello-python` using the current directory (where the Dockerfile resides).
+
+5. Run the container:
+
+   ```bash
+   docker run --rm hello-python
+   ```
+
+   This will execute your script inside a container and output:
+
+   ```
+   Hello, World!
+   ```
+
+   The `--rm` flag ensures the container is removed after execution, keeping your system clean.
+
+### Task 2: Add Dependencies with requirements.txt
+
+In this task, you will enhance your application by including external Python dependencies, and learn how to install them in your Docker container using a `requirements.txt` file — the most widely used format for listing dependencies in Python projects.
+
+1. Modify your Python script to use a third-party library. We'll use the `requests` library:
+
+   ```python
+   # ./app/hello.py
+   import requests
+   print("Hello, World!", requests.__version__)
+   ```
+
+   This version of the script prints the installed version of `requests`, demonstrating that the package is available inside the container.
+
+2. Create a `requirements.txt` file in your root project directory with the following content:
+
+   ```txt
+   requests
+   ```
+
+   This file specifies the packages to be installed via `pip`. Each line should list one package, optionally with a version specifier.
+
+3. Update your Dockerfile to include this dependency installation step:
+
+   ```Dockerfile
+   FROM python:3.11-slim
+   WORKDIR /app
+   COPY ./app /app
+   COPY requirements.txt ./
+   RUN pip install --no-cache-dir -r requirements.txt
+   CMD ["python", "hello.py"]
+   ```
+
+   Here's what changed:
+
+   * The `COPY requirements.txt ./` step adds the requirements file to the Docker image.
+   * The `RUN pip install ...` command installs the packages inside the container.
+
+4. Rebuild your image and run the container:
+
+   ```bash
+   docker build -t hello-python-reqs .
+   docker run --rm hello-python-reqs
+   ```
+
+   If everything is configured correctly, you should see output like:
+
+   ```
+   Hello, World! 2.31.0
+   ```
+
+   (Version number may vary depending on the latest version of `requests`).
+
+This setup illustrates the basic workflow of containerizing a Python app with external dependencies using the `requirements.txt` method.
 
 ## Questions
-1. What are the main benefits of learning through exercises compared to passive learning?
-2. How do exercises improve long-term retention?
-3. Can you think of a subject where learning through exercises might be less effective? Why?
-4. What role does feedback play in learning through exercises?
-5. How can self-designed exercises improve understanding?
-6. Why is it beneficial to review past mistakes in exercises?
-7. How does explaining a concept to someone else reinforce your own understanding?
-8. What strategies can you use to stay motivated when practicing with exercises?
-9. How can timed challenges contribute to learning efficiency?
-10. How do exercises help bridge the gap between theory and practical application?
+
+1. What are the advantages of using Docker over virtual environments for Python?
+2. What are the limitations of using `requirements.txt` compared to more modern tools?
+3. How does Docker help ensure that dependencies remain consistent across different environments?
 
 ## Advice
-Practice consistently and seek out diverse exercises that challenge different aspects of a topic. Combine exercises with reflection and feedback to maximize your learning efficiency. Don't hesitate to adapt exercises to fit your own needs and ensure that you're actively engaging with the material, rather than just going through the motions.
 
+Mastering Docker for Python projects can significantly enhance your productivity and confidence in deploying reliable software. Begin with simple setups and focus on mastering `requirements.txt`-based workflows. This foundation will serve you well before exploring advanced tools and standards. Don’t hesitate to consult the official Docker and Python packaging documentation—these are essential references. For related exercises, see [Virtual Environments and pip](https://github.com/STEMgraph/missing) and [Docker Networks and Volumes](https://github.com/STEMgraph/missing).
