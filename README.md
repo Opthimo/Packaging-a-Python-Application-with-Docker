@@ -143,8 +143,22 @@ This setup illustrates the basic workflow of containerizing a Python app with ex
 ## Questions
 
 1. What are the advantages of using Docker over virtual environments for Python?
+
+Docker packages the entire OS environment, not just Python packages. This means identical behavior 
+across all machines regardless of host OS differences. Virtual environments only isolate Python 
+packages but still depend on system-level configurations.
+
 2. What are the limitations of using `requirements.txt` compared to more modern tools?
+
+No dependency conflict resolution
+
 3. How does Docker help ensure that dependencies remain consistent across different environments?
+
+Immutable base images ensure identical Python installations across builds.
+Each container has an isolated filesystem eliminating host system interference.
+
+When you push a Docker image, you're storing the entire built environment, not just code. Everyone 
+pulling that image gets exactly the same pre-built environment with zero variability.
 
 ## Advice
 
